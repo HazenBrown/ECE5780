@@ -69,7 +69,7 @@ with hardware register access. */
 	
 RCC->AHBENR |= (1<<19); //Enable the 19th bit
 
-	GPIOC->MODER |= (5<<12);
+	GPIOC->MODER |= (5<<16);
 	GPIOC->OTYPER &= 0;
 	GPIOC->OSPEEDR &= 0;
 	GPIOC->PUPDR &= 0;
@@ -77,16 +77,16 @@ RCC->AHBENR |= (1<<19); //Enable the 19th bit
 	//GPIOC->BSRR |= (3<<8); //Turns LED on
 	
 while (1) {
- // Delay 200ms
 	
-	GPIOC->BSRR |= (1<<7);
+	Delay 200ms
+	GPIOC->BSRR |= (1<<9);
 	HAL_Delay(100);
-	GPIOC->BSRR |= (1<<22);
-	HAL_Delay(300);
-	GPIOC->BSRR |= (1<<6); //Turns LED on
+	GPIOC->BSRR |= (1<<24);
 	HAL_Delay(100);
-	GPIOC->BSRR |= (01<<23);
-	HAL_Delay(300);
+	GPIOC->BSRR |= (1<<8); //Turns LED on
+	HAL_Delay(100);
+	GPIOC->BSRR |= (01<<25);
+	//HAL_Delay(100);
 	//GPIOC->BSRR |= (1<<24); //Turns LED on
 	//GPIOC->BSRR |= (1<<25); //Turns LED on
 }
