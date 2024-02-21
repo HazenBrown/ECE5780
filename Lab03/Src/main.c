@@ -122,8 +122,8 @@ int main(void)
 	TIM3->CCER |= TIM_CCER_CC2E;
 	
 	//Set the alternate function mode.
-	TIM3->CCR1 = 32;
-	TIM3->CCR2 = 32;
+	TIM3->CCR1 = 8;
+	TIM3->CCR2 = 8;
 	
 	
 	//Configure pin
