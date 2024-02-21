@@ -47,12 +47,6 @@
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-/* USER CODE BEGIN PFP */
-
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
 
@@ -66,9 +60,8 @@ int main(void)
 
   /* USER CODE END 1 */
 	
-	//Configure LEDs
+	//Configure LEDs and enable hardware
 	RCC->AHBENR |= (1<<19); //Enable the 19th bit for clock
-	//GPIOC->MODER |= (85<<12);
 	
 	GPIOC->MODER |= (90<<12);
 	GPIOC->OTYPER &= 0;
@@ -87,8 +80,7 @@ int main(void)
 	
 	TIM2->DIER |= 1; // Enabele update interrupt for TIM2
 	
-	__NVIC_EnableIRQ(TIM2_IRQn); //Enables 
-  /* USER CODE END Init */
+	__NVIC_EnableIRQ(TIM2_IRQn); // Enable tim2
 
   /* Configure the system clock */
   SystemClock_Config();
@@ -96,17 +88,18 @@ int main(void)
   /* USER CODE BEGIN SysInit */
 	
 	//***********************************************************************
+	
 	//Clock frequency 4Hz
 	//Clock period .25s or 250ms
 	//Divide by 8000 to reduce frequency to 1kHz giving 1ms per cound
 	TIM2->PSC = 7999;
 	TIM2->ARR = 250; // 0xFA , 250 , Modify to achieve the 4Hz
 	
-	
+	//Set the target frequency for TIM3
 	TIM3->PSC = 249;
 	TIM3->ARR = 40;
 	
-	//Start the timer.
+	//Start the timer for use
 	TIM2->CR1 |= 1;
 	
 	
@@ -129,16 +122,18 @@ int main(void)
 	TIM3->CCER |= TIM_CCER_CC2E;
 	
 	//Set the alternate function mode.
-	TIM3->CCR1 = 8;
-	TIM3->CCR2 = 8;
+	TIM3->CCR1 = 32;
+	TIM3->CCR2 = 32;
 	
 	
 	//Configure pin
-	GPIOC->AFR[0] &= ~GPIO_AFRL_AFSEL6; // Check this if non working
+	GPIOC->AFR[0] &= ~GPIO_AFRL_AFSEL6; 
 	GPIOC->AFR[0] &= ~GPIO_AFRL_AFSEL7;
-	//***********************************************************************
 	
 	TIM3->CR1 |= TIM_CR1_CEN;
+	//***********************************************************************
+	
+	
 	
   /* USER CODE END SysInit */
 
@@ -161,11 +156,9 @@ int main(void)
 }
 
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  */
-
-//Tim2 Handler
+*		TIM3 Handler
+*		Toggles between green and orange leds at the frequency of TIM2
+*/
 void TIM2_IRQHandler(void){
 	
 	HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
@@ -173,6 +166,10 @@ void TIM2_IRQHandler(void){
 	 TIM2->SR &= ~TIM_SR_UIF;
 }
 
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
