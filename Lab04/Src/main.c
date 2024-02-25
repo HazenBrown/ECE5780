@@ -90,10 +90,10 @@ int main(void)
 	//Configure LEDs and enable hardware
 	RCC->AHBENR |= (1<<19); //Enable the 19th bit for clock
 	
-	//GPIOC->MODER |= (90<<12);
-	//GPIOC->OTYPER &= 0;
-	//GPIOC->OSPEEDR &= 0;
-	//GPIOC->PUPDR &= 0;
+	GPIOC->MODER |= (85<<12);
+	GPIOC->OTYPER &= 0;
+	GPIOC->OSPEEDR &= 0;
+	GPIOC->PUPDR &= 0;
 	
 	//Enable alternate function mode on PC4 and PC5
 	GPIOC->MODER |= (10 << 8);
@@ -128,13 +128,45 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 	char test = 'b';
 	char test2[] = {'a','b','c','\0'};
+	char errorstring[] = {'E','R','R','O','R','\t','\0'}; 
 	
   while (1)
   {
+		//Test code from beginning of lab
 		//tranchar(test);
-		transtring(test2);
+		//transtring(test2);	
+		//HAL_Delay(200);
 		
-		HAL_Delay(200);
+		//Check and wait on read status flag.
+		while ((USART3->ISR & USART_ISR_RXNE) == 0) {
+        // Wait
+    }
+		
+		//Read register contents into a temporary variable
+		char regread = USART3->RDR;
+	
+		//Check read character and toggle LEDs respectively
+		
+		if(regread == 'r'){
+			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+		}
+		else if(regread == 'o'){
+			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
+		}
+		else if(regread == 'g'){
+			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
+		}
+		else if(regread == 'b'){
+			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_7);
+		}
+		else if(regread != 13 || regread != 'r' || regread != 'g' || regread != 'b' || regread != 'o')  {
+			transtring(errorstring);
+		}
+		//green 9 red 6 blue 6
+		
+		
+		//USART3->TDR = 
+		
   }
   /* USER CODE END 3 */
 }
