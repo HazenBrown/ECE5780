@@ -126,20 +126,20 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	char test = 'b';
-	char test2[] = {'a','b','c','\0'};
-	char errorstring[] = {'E','R','R','O','R','\t','\0'}; 
+	char testchar = 'b';
+	char teststring[] = {'a','b','c','\0'};
+	char errorstring[] = {'E','R','R','O','R',':','\t','I','N','V','A','L','I','D','\t','K','E','Y','\t'}; 
 	
   while (1)
   {
 		//Test code from beginning of lab
-		//tranchar(test);
-		//transtring(test2);	
+		//tranchar(testchar);
+		//transtring(teststring);	
 		//HAL_Delay(200);
 		
 		//Check and wait on read status flag.
 		while ((USART3->ISR & USART_ISR_RXNE) == 0) {
-        // Wait
+    
     }
 		
 		//Read register contents into a temporary variable
@@ -162,10 +162,8 @@ int main(void)
 		else if(regread != 13 || regread != 'r' || regread != 'g' || regread != 'b' || regread != 'o')  {
 			transtring(errorstring);
 		}
-		//green 9 red 6 blue 6
 		
 		
-		//USART3->TDR = 
 		
   }
   /* USER CODE END 3 */
