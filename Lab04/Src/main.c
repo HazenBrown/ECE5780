@@ -51,6 +51,8 @@ void SystemClock_Config(void);
 void tranchar(char key);
 
 void transtring(char key[]);
+
+void Parse();
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -59,6 +61,22 @@ void transtring(char key[]);
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
+
+//Global Variables 6
+//int readData;
+volatile int readData;
+volatile int flagSet;
+volatile int counter = 0;
+volatile char color;
+volatile int mode;
+	
+char errorstring[] = {'E','R','R','O','R',':','\t','I','N','V','A','L','I','D','\t','K','E','Y','\n','\0'}; 
+char cmdprompt[] = {'C','M','D','?','\0'};
+char testpoint[] = {'a','a','a','\n','\0'};
+
+char char1[] = {'C','H','A','R','1','\n','\0'};
+char char2[] = {'C','H','A','R','2','\n','\0'};
+
 
 /**
   * @brief  The application entry point.
@@ -113,9 +131,13 @@ int main(void)
 	//Enable transmit and recieve as well as enable the USART
 	USART3->CR1 |= 13;
 	
+	//Enable RXNE Interrupt
+	USART3->CR1 |= (1<<5);
+	
+	__NVIC_EnableIRQ(USART3_4_IRQn);
+	NVIC_SetPriority(USART3_4_IRQn, 0);
 	
 	//********************************************************
-	
 
   /* USER CODE END SysInit */
 
@@ -128,8 +150,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 	char testchar = 'b';
 	char teststring[] = {'a','b','c','\0'};
-	char errorstring[] = {'E','R','R','O','R',':','\t','I','N','V','A','L','I','D','\t','K','E','Y','\t'}; 
 	
+
+	transtring(cmdprompt);
+		
   while (1)
   {
 		//Test code from beginning of lab
@@ -137,8 +161,9 @@ int main(void)
 		//transtring(teststring);	
 		//HAL_Delay(200);
 		
-		//Check and wait on read status flag.
-		while ((USART3->ISR & USART_ISR_RXNE) == 0) {
+		//Check and wait on read status flag. ***************
+		//Disable interrupt when testing
+		/**while ((USART3->ISR & USART_ISR_RXNE) == 0) {
     
     }
 		
@@ -161,14 +186,136 @@ int main(void)
 		}
 		else if(regread != 13 || regread != 'r' || regread != 'g' || regread != 'b' || regread != 'o')  {
 			transtring(errorstring);
+		}*/
+		//****************************************************
+		
+		if(flagSet == 1){
+			
+			Parse();
+				
+			flagSet = 0;
+			
 		}
-		
-		
-		
+
   }
   /* USER CODE END 3 */
 }
 
+void Parse(void){
+	
+	if(counter == 0){
+		color = readData;
+		
+		if(!(color == 'r'|| color == 'b' || color == 'g' || color == 'o')){
+			transtring(errorstring);
+			counter = 0;
+		}
+		else{
+			transtring(char1);
+			counter++;
+		}
+	}
+	else if(counter == 1){
+		mode = readData;
+		transtring(char2);
+		counter++;
+		
+	}
+	
+	//transtring(testpoint);
+	if(counter == 2){
+		if(color == 'r'){
+			if(mode == '0'){
+				//Turn off LED
+				GPIOC->BSRR |= (1<<22);
+			}
+			else if(mode == '1'){
+				//Turn on LED
+				GPIOC->BSRR |= (1<<6);
+			}
+			else if(mode == '2'){
+				//Toggle LED
+				HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+			}
+			else
+				transtring(errorstring);
+			
+		}
+		else if(color == 'o'){
+			if(mode == '0'){
+				//Turn off LED
+				GPIOC->BSRR |= (1<<24);
+			}
+			else if(mode == '1'){
+				//Turn on LED
+				GPIOC->BSRR |= (1<<8);
+			}
+			else if(mode == '2'){
+				//Toggle LED
+				HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
+			}
+			else
+				transtring(errorstring);
+			
+			
+		}
+		else if(color == 'g'){
+			if(mode == '0'){
+				//Turn off LED
+				GPIOC->BSRR |= (1<<25);
+			}
+			else if(mode == '1'){
+				//Turn on LED
+				GPIOC->BSRR |= (1<<9);
+			}
+			else if(mode == '2'){
+				//Toggle LED
+				HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
+			}
+			else
+				transtring(errorstring);
+				
+			
+		}
+		else if(color == 'b'){
+			if(mode == '0'){
+				//Turn off LED
+				GPIOC->BSRR |= (1<<23);
+			}
+			else if(mode == '1'){
+				//Turn on LED
+				GPIOC->BSRR |= (1<<7);
+			}
+			else if(mode == '2'){
+				//Toggle LED
+				HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_7);
+			}
+			else
+				transtring(errorstring);
+		}
+		//Error message if invalid color is entered
+		else if(color != 13 || color != 'r' || color != 'g' || color != 'b' || color != 'o')  {
+			transtring(errorstring);
+		}
+		counter = 0;
+	}
+		
+	
+}
+	
+//USART3 Interrupt handler
+void USART3_4_IRQHandler(void){
+	
+	if (USART3->ISR & USART_ISR_RXNE){
+	//transtring(testpoint);
+		flagSet = 1;
+		
+		readData = USART3->RDR;
+		//transtring(testpoint);
+	}
+	
+}
+	
 void tranchar(char key)
 {
 	//While the transmit data register is not empty...
