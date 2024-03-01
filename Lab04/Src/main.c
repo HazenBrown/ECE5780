@@ -13,6 +13,7 @@
   * in the root directory of this software component.
   * If no LICENSE file comes with this software, it is provided AS-IS.
   *
+		//NOTE for putty configuration, Set implicit cr for lf and force echo ON
   ******************************************************************************
   */
 /* USER CODE END Header */
@@ -134,10 +135,7 @@ int main(void)
 	//Enable RXNE Interrupt
 	USART3->CR1 |= (1<<5);
 	
-	__NVIC_EnableIRQ(USART3_4_IRQn);
-	NVIC_SetPriority(USART3_4_IRQn, 0);
 	
-	//********************************************************
 
   /* USER CODE END SysInit */
 
@@ -148,6 +146,12 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+	
+	// Part02 Interrupt enable, uncomment for part 2
+	/**__NVIC_EnableIRQ(USART3_4_IRQn);
+	NVIC_SetPriority(USART3_4_IRQn, 0);*/
+	//********************************************************
+	
 	char testchar = 'b';
 	char teststring[] = {'a','b','c','\0'};
 	
@@ -163,7 +167,7 @@ int main(void)
 		
 		//Check and wait on read status flag. ***************
 		//Disable interrupt when testing
-		/**while ((USART3->ISR & USART_ISR_RXNE) == 0) {
+		while ((USART3->ISR & USART_ISR_RXNE) == 0) {
     
     }
 		
@@ -186,16 +190,17 @@ int main(void)
 		}
 		else if(regread != 13 || regread != 'r' || regread != 'g' || regread != 'b' || regread != 'o')  {
 			transtring(errorstring);
-		}*/
+		}
 		//****************************************************
 		
-		if(flagSet == 1){
+		//Uncomment for Part02 Code*******************************
+		/**if(flagSet == 1){
 			
 			Parse();
 				
 			flagSet = 0;
 			
-		}
+		}*/
 
   }
   /* USER CODE END 3 */
@@ -315,7 +320,8 @@ void USART3_4_IRQHandler(void){
 	}
 	
 }
-	
+// Function used to transmit a character
+// Takes a single character parameter and saves that into the TDR register.
 void tranchar(char key)
 {
 	//While the transmit data register is not empty...
@@ -328,6 +334,8 @@ void tranchar(char key)
 	USART3->TDR = key;
 }
 
+//Function used to transmit a string of chars
+//Takes an array of chars and transmits each char seperately. 
 void transtring(char key[])
 {
 	
