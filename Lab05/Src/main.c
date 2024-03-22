@@ -1,3 +1,4 @@
+
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
@@ -19,29 +20,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
-
-/* USER CODE END Includes */
-
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
-
-/* Private variables ---------------------------------------------------------*/
-
-/* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
 
@@ -56,21 +34,8 @@ void SystemClock_Config(void);
 
 /* USER CODE END 0 */
 
-//Setting the SADD and NBYTES example
-/* Clear the NBYTES and SADD bit fields
-* The NBYTES field begins at bit 16, the SADD at bit 0
-*/
-//I2C2->CR2 &= ~((0x7F << 16) | (0x3FF << 0));
-/* Set NBYTES = 42 and SADD = 0x14
-* Can use hex or decimal values directly as bitmasks.
-* Remember that for 7-bit addresses, the lowest SADD bit
-* is not used and the mask must be shifted by one.
-*/
-//I2C2->CR2 |= (42 << 16) | (0x14 << 1);
-
-
-
-
+//read axis func declaration
+int read_Axis(int address);
 
 
 
@@ -147,16 +112,89 @@ I2C2->TIMINGR |= (0x2<<16);
 I2C2->TIMINGR |= (0x4<<20);
 //Enable PE bit i2c2 cr1
 I2C2->CR1 |= 1;
+/////////////////////////////////////////////////
 
-//5.4
 //Set slave address of 0x69 in SADD[7:1]
 I2C2->CR2 |= (0x69 << 1);
-//Set number of bytes to transmit to 1
-I2C2->CR2 |= (1 << 16);
+//Set number of bytes to transmit to 2
+I2C2->CR2 |= (1 << 17);
 //Set the write register to 0 to indicate a write operation
 I2C2->CR2 &= ~(1 << 10);
-//Set the start bit
-I2C2->CR2 |= (1 << 13);
+
+
+//Gyroscope WHO_AM_I address
+uint8_t Gyroscope_Address = 0x0F;
+//Control Register 1
+uint8_t CTRL_Reg_Address = 0x20;
+//Data to enable X and Y axis, set PD bit for normal/sleep
+uint8_t Data = 0x0B;
+	
+	 //Set the start bit
+	 I2C2->CR2 |= (1 << 13);
+	 
+	 //Wait for TXIS or NACKF
+	 while(!(I2C2->ISR &= (1<<4)) && !(I2C2->ISR &= (1<<1)))
+		{
+			
+		}
+		//If NACKF is set...
+		if((I2C2->ISR &= (1<<4)))
+		{
+			//Turn Red LED ON
+			GPIOC->BSRR |= (1<<6);
+		}
+		//If TXIS is set continue...
+		else if(I2C2->ISR &= (1<<1))
+		{
+			
+			//Turn Green LED ON
+			
+			//Uncomment for Part 1
+			//I2C2->TXDR = Gyroscope_Address; //Set the who am I address register
+			I2C2->TXDR = CTRL_Reg_Address; 
+			
+			//Wait until the TC flag is set,
+
+			while(!(I2C2->ISR &= (1<<4)) && !(I2C2->ISR &= (1<<1)))
+			{
+			
+			}
+			//If NACKF is set...
+			if((I2C2->ISR &= (1<<4)))
+			{
+				//Turn Red LED ON
+				GPIOC->BSRR |= (1<<6);
+			}
+			//If TXIS is set continue...
+			else if(I2C2->ISR &= (1<<1))
+			{
+							
+				
+							
+				
+							I2C2->TXDR = Data; 
+				
+							
+				//Wait until the TC flag is set,
+				while(!(I2C2->ISR &= (1 << 6)))
+				{
+					
+				}
+				
+				I2C2->CR2 |= (1<<14);
+					//set the stop bit
+					//LOOK FOR PROBLEM HERE...
+			}
+		}
+		
+
+
+
+
+//////////////////////////////////////////////////
+//5.4
+//Set slave address of 0x69 in SADD[7:1]
+
 
 //enable LEDs
 GPIOC->MODER |= (85<<12);
@@ -169,11 +207,85 @@ GPIOC->MODER |= (85<<12);
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	 uint8_t received_data;
+	 int x_data;
+	 int y_data;
 	 
   while (1)
   {
-    /* USER CODE END WHILE */
+		HAL_Delay(1);
+		x_data = read_Axis(0xA8);
+		HAL_Delay(1);
+		y_data = read_Axis(0xAA);
+		
+		HAL_Delay(100);
+		
+		if(x_data < -900)
+		{
+			//Turn off Green LED
+			GPIOC->BSRR |= (1<<25);
+			//Turn on Orange LED
+			GPIOC->BSRR |= (1<<8);
+		}
+		else if(x_data > 900)
+		{
+			//Turn off Orange LED
+			GPIOC->BSRR |= (1<<24);
+			//Turn on Green LED
+			GPIOC->BSRR |= (1<<9);
+		}
+		else{
+			//Turn Both LEDs OFF
+			GPIOC->BSRR |= (1<<25);
+			GPIOC->BSRR |= (1<<24);
+		}
+		
+		if(y_data < -900)
+		{
+			//Turn off LED
+				GPIOC->BSRR |= (1<<22);
+			//Turn on Blue LED
+			GPIOC->BSRR |= (1<<7);
+		}
+		else if(y_data > 900)
+		{
+			//Turn off LED
+				GPIOC->BSRR |= (1<<23);
+			//Turn on Red LED
+			GPIOC->BSRR |= (1<<6);
+		}
+		else{
+			//Turn Both LEDs OFF
+			GPIOC->BSRR |= (1<<22);
+			GPIOC->BSRR |= (1<<23);
+		}
+
+  }
+
+}
+
+/**
+* Read Axis function
+* Takes address of each axis, then assembles and returns data
+*/
+int read_Axis(int address)
+{
+		//Temp variables 
+		int received_data_L;
+	  int received_data_H;
+		int returnval; 
+		
+		//Clear Nbytes and Slave address
+		I2C2->CR2 &= ~((0x7F << 16) | (0x3FF << 0));
+		//Set slave address
+		I2C2->CR2 |= (0x69 << 1);
+		//Set number of bytes to transmit to 1
+		I2C2->CR2 |= (1 << 16);
+		//Set the write register to 0 to indicate a write operation
+		I2C2->CR2 &= ~(1 << 10);
+		//Set the start bit
+		I2C2->CR2 |= (1 << 13);
+		
+    //Wait for TXIS or NACKF
 		while(!(I2C2->ISR &= (1<<4)) && !(I2C2->ISR &= (1<<1)))
 		{
 			
@@ -190,24 +302,23 @@ GPIOC->MODER |= (85<<12);
 			
 			//Turn Green LED ON
 			
-			I2C2->TXDR = 0x0F; //Set the who am I address register
+			I2C2->TXDR = address; //Set the who am I address register
 			
 			//Wait until the TC flag is set,
 			while(!(I2C2->ISR &= (1 << 6)))
 			{
 				
 			}
-					
+			
+			//Clear Nbytes and Slave address
+			I2C2->CR2 &= ~((0x7F << 16) | (0x3FF << 0));
 			//Set slave address of 0x69 in SADD[7:1]
 			I2C2->CR2 |= (0x69 << 1);
-			
 			//Set number of bytes to transmit to 1
-			I2C2->CR2 |= (1 << 16);
-			
+			I2C2->CR2 |= (1 << 17);
 			//Set the write register to 1 to indicate a read operation
 			I2C2->CR2 |= (1 << 10);
-			
-			//Set the start bit
+			//Set the start bit again
 			I2C2->CR2 |= (1 << 13);
 			
 			//Wait for NACK or RXNE is flagged
@@ -219,40 +330,50 @@ GPIOC->MODER |= (85<<12);
 			//If nack is set, turn on Red LED
 			if((I2C2->ISR &= (1<<4)))
 			{
-			//Turn Red LED ON
 				GPIOC->BSRR |= (1<<6);
 			}
 			//If RXNE is set, continue
 			else if(I2C2->ISR &= (1<<2))
 			{
+				//Read Low Byte
+				received_data_L = I2C2->RXDR;
 				
-				//Wait until the TC flag is set,
-				while(!(I2C2->ISR &= (1 << 6)))
+				//Wait for NACK or RXNE is flagged
+				while(!(I2C2->ISR &= (1<<2)) && !(I2C2->ISR &= (1<<4)))
 				{
-					
+			
 				}
-				//Read contents of RXDR register
-				received_data = I2C2->RXDR;
-				
-				GPIOC->BSRR |= (1<<7);
-				
-				//If the contents in the RXDR register match 0xd3 then release the bus
-				if(received_data == 0xD3)
+			
+				//If nack is set, turn on Red LED
+				if((I2C2->ISR &= (1<<4)))
 				{
-					//Turn on green LED
+					GPIOC->BSRR |= (1<<6);
+				}
+				//If RXNE is set, continue
+				else if(I2C2->ISR &= (1<<2))
+				{
+				}
+				
+				received_data_H = I2C2->RXDR;
+				
+					//Wait until the TC flag is set,
+					while(!(I2C2->ISR &= (1 << 6)))
+					{
 					
-					GPIOC->BSRR |= (1<<8);
+					}
 					
+					//Assemble Data
+					returnval = (received_data_H << 8) | received_data_L;
+					
+				
 					//set the stop bit
 					I2C2->CR2 |= (1<<14);
-				}
+				
 			}	
 		}
-    /* USER CODE BEGIN 3 */
-  }
-  /* USER CODE END 3 */
+		
+		return (int16_t)returnval;
 }
-
 /**
   * @brief System Clock Configuration
   * @retval None
