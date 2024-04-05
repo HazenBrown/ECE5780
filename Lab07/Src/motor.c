@@ -167,13 +167,13 @@ void PI_update(void) {
      */
 		 
 		 //22.2 sampling frequeny 
-    
+		 
+    //Actual value calculated was close to 2.2, rounded down to keep integer format.
 		error =  (target_rpm * 2) - motor_speed ; //Convert target rpm to encoder counts.
     
     /// TODO: Calculate integral portion of PI controller, write to "error_integral" variable
     
 		error_integral = error_integral + (Ki * error); 
-		//error_integral = error_integral + error;
 		
     /// TODO: Clamp the value of the integral to a limited positive range
     
@@ -183,6 +183,7 @@ void PI_update(void) {
      *       Recommend that you clamp between 0 and 3200 (what is used in the lab solution)
      */
 		 
+		 //Clamp value between 0 and 3200
 		 if(error_integral < 0)
 		 {
 			 error_integral = 0;
@@ -193,10 +194,9 @@ void PI_update(void) {
 		 }
     
     /// TODO: Calculate proportional portion, add integral and write to "output" variable
-		 
-    //int16_t output = (Kp * error) + error_integral; // Change this!
+	
     int16_t output = (Kp * error);
-		 output = output + (error_integral);
+		output = output + (error_integral);
 		 
     /* Because the calculated values for the PI controller are significantly larger than 
      * the allowable range for duty cycle, you'll need to divide the result down into 
